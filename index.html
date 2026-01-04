@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemesanan Tiket Bioskop</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #00cec9;
+            --danger: #e17055;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --dark: #2d3436;
+            --light: #f5f5f5;
+            --gray: #b2bec3;
+            --shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            color: #2d3436;
+        }
+
+        /* LOGIN */
+        #login-screen {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('https://images.unsplash.com/photo-1581092580497-e0d23cbdf393?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            position: relative;
+        }
+        #login-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        .login-card {
+            width: 420px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            animation: fadeInUp 0.6s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .info-box {
+            background: linear-gradient(135deg, #a5d6a7, #81c784);
+            border: 1px solid #66bb6a;
+            color: #2e7d32;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #6c5ce7);
+            border: none;
+            padding: 12px 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        /* DASHBOARD */
+        #main-app { display: none; }
+
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #2d3436, #1e272e);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link {
+            color: #b2bec3;
+            padding: 12px 20px;
+            margin: 8px 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .content-wrapper {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            background: white;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), #6c5ce7);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* KURSI LAYOUT */
+        .seat-map {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .seat-row {
+            margin: 5px 0;
+            display: flex;
+            justify-content: center;
+        }
+        .seat {
+            width: 50px;
+            height: 50px;
+            margin: 3px;
+            font-weight: bold;
+            border: 2px solid #ddd;
+            background: #2ecc71;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .seat:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .seat.selected {
+            background: var(--danger);
+            border-color: #e17055;
+        }
+        .seat.booked {
+            background: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* NOTA & STATUS */
+        .badge-status {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .badge-belum-dibayar {
+            background: var(--danger);
+            color: white;
+        }
+        .badge-sudah-dibayar {
+            background: var(--success);
+            color: white;
+        }
+
+        /* TOAST NOTIFIKASI */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+            display: none;
+            animation: slideInRight 0.4s ease;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-success {
+            border-left-color: var(--success);
+        }
+        .toast-error {
+            border-left-color: var(--danger);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 0;
+            }
+            .sidebar .nav-link span {
+                display: none;
+            }
+            .content-wrapper {
+                margin-left: 70px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .login-card {
+                width: 95%;
+                margin: 0 15px;
+            }
+            .content-wrapper {
+                margin-left: 0;
+            }
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="login-screen">
+    <div class="login-card">
+        <h3 class="text-center fw-bold mb-3">
+            <i class="fa-solid fa-film me-2"></i>Pemesanan Tiket Bioskop
+        </h3>
+
+        <div class="info-box">
+            Default User: <b>admin</b> | Pass: <b>admin123</b>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" id="username" class="form-control" value="admin" placeholder="Masukkan username">
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" value="admin123" placeholder="Masukkan password">
+        </div>
+
+        <button class="btn btn-primary w-100" onclick="login()">
+            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Login Masuk
+        </button>
+    </div>
+</div>
+
+<!-- ================= MAIN APP ================= -->
+<div id="main-app">
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- SIDEBAR -->
+            <div class="col-md-2 sidebar p-3">
+                <h4 class="text-center mb-4">
+                    <i class="fa-solid fa-film me-2"></i>Bioskop
+                </h4>
+
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" onclick="switchTab('dashboard',this)">
+                            <i class="fa-solid fa-gauge me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="switchTab('order',this)">
+                            <i class="fa-solid fa-ticket me-2"></i>Pemesanan Tiket
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="switchTab('promo',this)">
+                            <i class="fa-solid fa-tags me-2"></i>Promo
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="switchTab('log',this)">
+                            <i class="fa-solid fa-clock-rotate-left me-2"></i>Log Aktivitas
+                        </a>
+                    </li>
+
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-danger" onclick="logout()">
+                            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="col-md-10 content-wrapper">
+
+                <!-- HEADER -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 id="pageTitle" class="fw-bold">Dashboard</h2>
+                    <div>
+                        <span class="badge bg-secondary me-2" id="userLabel">admin</span>
+                        <button class="btn btn-warning btn-sm me-2" onclick="undoLastOrder()">
+                            <i class="fa-solid fa-rotate-left"></i> Undo
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="generateReport()">
+                            <i class="fa-solid fa-file-export"></i> Laporan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD -->
+                <div id="view-dashboard" class="view-section active">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card p-3 bg-primary text-white">
+                                <h5>Total Pemesan</h5>
+                                <h2 id="total-pemesan">0</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card p-3 bg-success text-white">
+                                <h5>Total Penjualan Tiket</h5>
+                                <h2 id="total-pendapatan">Rp 0</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card p-3 bg-danger text-white">
+                                <h5>Tiket Belum Dibayar</h5>
+                                <h2 id="belum-dibayar">0</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-3">
+                        <h5>Status Pemesanan Tiket</h5>
+                        <table class="table mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Film</th>
+                                    <th>Jam</th>
+                                    <th>Kursi</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-list">
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PEMESANAN -->
+                <div id="view-order" class="view-section">
+                    <div class="card p-3">
+                        <h5 class="card-header">Pemesanan Tiket</h5>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-4">
+                                <input class="form-control" id="nama-pemesan" placeholder="Nama Pemesan">
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="film-pilihan">
+                                    <option value="">-- Pilih Film --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="jam-tayang">
+                                    <option>13:00</option>
+                                    <option>16:00</option>
+                                    <option>19:00</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label>Jumlah Tiket:</label>
+                            <input type="number" id="jumlah-tiket" class="form-control" min="1" max="10" value="1">
+                        </div>
+
+                        <div class="mt-3">
+                            <h6>Layout Kursi (5x6)</h6>
+                            <div class="seat-map" id="seatMap"></div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label>Promo (opsional):</label>
+                            <input type="text" id="kode-promo" class="form-control" placeholder="Contoh: MOVIE10">
+                        </div>
+
+                        <div class="mt-3">
+                            <label>Total Harga:</label>
+                            <input type="text" id="total-harga" class="form-control" readonly>
+                        </div>
+
+                        <button class="btn btn-primary mt-3 w-100" onclick="prosesPemesanan()">
+                            <i class="fa-solid fa-ticket me-2"></i>Pesan Tiket Sekarang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PROMO -->
+                <div id="view-promo" class="view-section">
+                    <div class="card p-3">
+                        <h5 class="card-header">Promo Tiket</h5>
+                        <table class="table mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Kode</th>
+                                    <th>Diskon</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge bg-success">MOVIE10</span></td>
+                                    <td>10%</td>
+                                    <td>Semua film</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-info">STUDENT20</span></td>
+                                    <td>20%</td>
+                                    <td>Untuk pelajar</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-warning">FAMILY30</span></td>
+                                    <td>30%</td>
+                                    <td>Min. 3 tiket</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- LOG -->
+                <div id="view-log" class="view-section">
+                    <div class="card p-3">
+                        <h5 class="card-header">Log Aktivitas</h5>
+                        <ul class="list-group" id="log-list">
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST NOTIFIKASI -->
+<div class="toast-container">
+    <div class="toast toast-success" id="toastSuccess">
+        <i class="fa-solid fa-check-circle me-2"></i><span id="toastMessage">Sukses!</span>
+    </div>
+    <div class="toast toast-error" id="toastError">
+        <i class="fa-solid fa-exclamation-circle me-2"></i><span id="toastMessageError">Error!</span>
+    </div>
+</div>
+
+<script>
+// Data film
+const films = [
+    { judul: "Avengers: Endgame", genre: "Action", harga: 50000 },
+    { judul: "Spirited Away", genre: "Animation", harga: 40000 },
+    { judul: "Conjuring 3", genre: "Horror", harga: 45000 },
+    { judul: "Oppenheimer", genre: "Drama", harga: 55000 },
+    { judul: "Inside Out 2", genre: "Family", harga: 42000 }
+];
+
+// Promo
+const promos = {
+    "MOVIE10": 0.10,
+    "STUDENT20": 0.20,
+    "FAMILY30": 0.30
+};
+
+// Data pemesanan
+let orders = JSON.parse(localStorage.getItem('orders')) || [];
+let logs = JSON.parse(localStorage.getItem('logs')) || [];
+
+// Inisialisasi
+function init() {
+    // Isi dropdown film
+    const filmSelect = document.getElementById('film-pilihan');
+    films.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.judul;
+        opt.textContent = `${f.judul} (${f.genre}) - Rp ${f.harga.toLocaleString('id-ID')}`;
+        filmSelect.appendChild(opt);
+    });
+
+    // Render kursi
+    renderSeats();
+
+    // Tampilkan data dashboard
+    updateDashboard();
+    renderOrders();
+    renderLogs();
+}
+
+// Render layout kursi
+function renderSeats() {
+    const seatMap = document.getElementById('seatMap');
+    seatMap.innerHTML = '';
+    for (let r = 0; r < 5; r++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'seat-row';
+        for (let c = 0; c < 6; c++) {
+            const seatId = String.fromCharCode(65 + r) + (c + 1);
+            const btn = document.createElement('button');
+            btn.className = 'seat';
+            btn.textContent = seatId;
+            btn.onclick = () => toggleSeat(seatId, btn);
+            rowDiv.appendChild(btn);
+        }
+        seatMap.appendChild(rowDiv);
+    }
+}
+
+let selectedSeats = [];
+function toggleSeat(seatId, btn) {
+    const max = parseInt(document.getElementById('jumlah-tiket').value) || 1;
+    if (btn.classList.contains('selected')) {
+        btn.classList.remove('selected');
+        selectedSeats = selectedSeats.filter(s => s !== seatId);
+    } else if (selectedSeats.length < max) {
+        btn.classList.add('selected');
+        selectedSeats.push(seatId);
+    }
+    updateTotal();
+}
+
+function updateTotal() {
+    const filmJudul = document.getElementById('film-pilihan').value;
+    const jumlah = parseInt(document.getElementById('jumlah-tiket').value) || 0;
+    const promoCode = document.getElementById('kode-promo').value.trim();
+    
+    let hargaFilm = 0;
+    for (let f of films) {
+        if (f.judul === filmJudul) {
+            hargaFilm = f.harga;
+            break;
+        }
+    }
+
+    let total = hargaFilm * jumlah;
+    let diskon = 0;
+
+    if (promoCode && promos[promoCode]) {
+        diskon = total * promos[promoCode];
+    }
+
+    total -= diskon;
+
+    document.getElementById('total-harga').value = `Rp ${total.toLocaleString('id-ID')}`;
+}
+
+function prosesPemesanan() {
+    const nama = document.getElementById('nama-pemesan').value.trim();
+    const filmJudul = document.getElementById('film-pilihan').value;
+    const jam = document.getElementById('jam-tayang').value;
+    const jumlah = parseInt(document.getElementById('jumlah-tiket').value);
+    const kursi = selectedSeats.join(', ');
+    const promo = document.getElementById('kode-promo').value.trim();
+    const total = parseInt(document.getElementById('total-harga').value.replace(/[^0-9]/g, '')) || 0;
+
+    if (!nama || !filmJudul || jumlah < 1 || jumlah > 10 || selectedSeats.length === 0) {
+        showToast("Harap isi semua data dengan benar!", "error");
+        return;
+    }
+
+    const newOrder = {
+        id: Date.now(),
+        nama: nama,
+        film: filmJudul,
+        jam: jam,
+        kursi: kursi,
+        jumlah: jumlah,
+        promo: promo,
+        total: total,
+        status: "Belum Dibayar",
+        timestamp: new Date().toLocaleString()
+    };
+
+    orders.push(newOrder);
+    localStorage.setItem('orders', JSON.stringify(orders));
+
+    logs.push(`[${new Date().toLocaleTimeString()}] ${nama} memesan ${jumlah} tiket ${filmJudul} (Kursi: ${kursi})`);
+    localStorage.setItem('logs', JSON.stringify(logs));
+
+    showToast("Pemesanan berhasil!", "success");
+    resetForm();
+    updateDashboard();
+    renderOrders();
+    renderLogs();
+}
+
+function resetForm() {
+    document.getElementById('nama-pemesan').value = '';
+    document.getElementById('film-pilihan').value = '';
+    document.getElementById('jumlah-tiket').value = '1';
+    document.getElementById('kode-promo').value = '';
+    document.getElementById('total-harga').value = '';
+    selectedSeats = [];
+    renderSeats();
+}
+
+function updateDashboard() {
+    document.getElementById('total-pemesan').textContent = orders.length;
+    const totalPendapatan = orders.reduce((sum, o) => sum + o.total, 0);
+    document.getElementById('total-pendapatan').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
+    const belumDibayar = orders.filter(o => o.status === "Belum Dibayar").length;
+    document.getElementById('belum-dibayar').textContent = belumDibayar;
+}
+
+function renderOrders() {
+    const tbody = document.getElementById('order-list');
+    tbody.innerHTML = '';
+
+    orders.slice().reverse().forEach(o => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${o.nama}</td>
+            <td>${o.film}</td>
+            <td>${o.jam}</td>
+            <td>${o.kursi}</td>
+            <td>Rp ${o.total.toLocaleString('id-ID')}</td>
+            <td><span class="badge badge-status ${o.status === 'Belum Dibayar' ? 'badge-belum-dibayar' : 'badge-sudah-dibayar'}">${o.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderLogs() {
+    const ul = document.getElementById('log-list');
+    ul.innerHTML = '';
+    logs.slice().reverse().forEach(log => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.textContent = log;
+        ul.appendChild(li);
+    });
+}
+
+function undoLastOrder() {
+    if (orders.length === 0) {
+        showToast("Tidak ada pemesanan untuk di-undo.", "error");
+        return;
+    }
+
+    const lastOrder = orders.pop();
+    logs.push(`[${new Date().toLocaleTimeString()}] UNDO: ${lastOrder.nama} membatalkan pesanan`);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    localStorage.setItem('logs', JSON.stringify(logs));
+
+    showToast(`Pemesanan ${lastOrder.nama} telah dibatalkan.`, "success");
+    updateDashboard();
+    renderOrders();
+    renderLogs();
+}
+
+function generateReport() {
+    const totalPendapatan = orders.reduce((sum, o) => sum + o.total, 0);
+    const totalPemesan = orders.length;
+    const belumDibayar = orders.filter(o => o.status === "Belum Dibayar").length;
+
+    const report = `
+        ===== LAPORAN SISTEM =====
+        Tanggal: ${new Date().toLocaleString()}
+        Total Pemesan: ${totalPemesan}
+        Total Pendapatan: Rp ${totalPendapatan.toLocaleString('id-ID')}
+        Tiket Belum Dibayar: ${belumDibayar}
+        ==========================
+    `;
+
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `laporan_${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById(type === 'success' ? 'toastSuccess' : 'toastError');
+    const msgElement = document.getElementById(type === 'success' ? 'toastMessage' : 'toastMessageError');
+    msgElement.textContent = message;
+    toast.style.display = 'block';
+
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
+}
+
+function login(){
+    const u = document.getElementById("username").value;
+    const p = document.getElementById("password").value;
+
+    if(u === "admin" && p === "admin123"){
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("main-app").style.display = "block";
+        document.getElementById("userLabel").innerText = u;
+        init();
+    } else {
+        showToast("Username atau password salah!", "error");
+    }
+}
+
+function logout(){
+    document.getElementById("main-app").style.display = "none";
+    document.getElementById("login-screen").style.display = "flex";
+}
+
+function switchTab(tab, el){
+    document.querySelectorAll(".view-section").forEach(v => v.classList.remove("active"));
+    document.querySelectorAll(".nav-link").forEach(n => n.classList.remove("active"));
+
+    document.getElementById("view-"+tab).classList.add("active");
+    el.classList.add("active");
+    document.getElementById("pageTitle").innerText = el.innerText.trim();
+}
+
+// Jalankan saat halaman dimuat
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
